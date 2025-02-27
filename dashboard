@@ -1,0 +1,319 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>C Connect - City Event Map</title>
+    <script src="https://unpkg.com/leaflet/dist/leaflet.js"></script>
+    <link rel="stylesheet" href="https://unpkg.com/leaflet/dist/leaflet.css">
+    
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            text-align: center;
+            margin: 0;
+            padding: 0;
+            background-color: #f4f4f4;
+        }
+
+        h1 {
+            background-color: #007bff;
+            color: white;
+            padding: 15px;
+            margin: 0;
+        }
+
+        #map {
+            width: 80%;
+            height: 400px;
+            margin: 20px auto;
+            border: 2px solid #007bff;
+            border-radius: 10px;
+        }
+
+        form, #searchContainer {
+            margin: 20px auto;
+            width: 60%;
+            display: flex;
+            flex-direction: column;
+            gap: 10px;
+        }
+
+        input, button {
+            padding: 10px;
+            font-size: 16px;
+            border-radius: 5px;
+            border: 1px solid #ccc;
+        }
+
+        button {
+            background-color: #007bff;
+            color: white;
+            cursor: pointer;
+        }
+
+        button:hover {
+            background-color: #0056b3;
+        }
+
+        #eventList {
+            width: 60%;
+            margin: 20px auto;
+            padding: 0;
+            list-style: none;
+        }
+
+        #eventList li {
+            background: white;
+            padding: 10px;
+            margin: 5px;
+            border-radius: 5px;
+            border-left: 5px solid #007bff;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .delete-btn {
+            background: red;
+            color: white;
+            border: none;
+            padding: 5px;
+            cursor: pointer;
+            border-radius: 3px;
+        }
+
+        /* Search Bar */
+        #searchContainer {
+            position: relative;
+            width: 60%;
+            margin-top: 10px;
+        }
+
+        #searchInput {
+            width: 100%;
+            padding: 10px;
+            font-size: 16px;
+            border-radius: 5px;
+            border: 1px solid #ccc;
+        }
+
+        #suggestions {
+            position: absolute;
+            width: 100%;
+            background: white;
+            border: 1px solid #ccc;
+            border-radius: 5px;
+            max-height: 150px;
+            overflow-y: auto;
+            z-index: 1000;
+            display: none;
+        }
+
+        #suggestions div {
+            padding: 10px;
+            cursor: pointer;
+        }
+
+        #suggestions div:hover {
+            background-color: #f0f0f0;
+        }
+
+        /* Filter Dropdown */
+        #filterCategory {
+            margin-top: 10px;
+            padding: 10px;
+            font-size: 16px;
+            border-radius: 5px;
+        }
+    </style>
+</head>
+<body>
+    <h1>C Connect - City Event Map</h1>
+
+    <!-- Search Bar -->
+    <div id="searchContainer">
+        <input type="text" id="searchInput" placeholder="Search for a location...">
+        <div id="suggestions"></div>
+    </div>
+
+    <!-- Map Container -->
+    <div id="map"></div>
+
+    <form id="eventForm">
+        <input type="text" id="eventName" placeholder="Event Name" required>
+        <select id="eventCategory" required>
+            <option value="">Select Category</option>
+            <option value="concert">🎵 Concert</option>
+            <option value="workshop">📚 Workshop</option>
+            <option value="sports">⚽ Sports</option>
+            <option value="theater">🎭 Theater</option>
+            <option value="food">🍔 Food Fest</option>
+        </select>
+        <input type="number" id="latitude" placeholder="Latitude" step="any" required>
+        <input type="number" id="longitude" placeholder="Longitude" step="any" required>
+        <button type="submit">Add Event</button>
+    </form>
+
+    <!-- Filter Events -->
+    <h3>Filter Events</h3>
+    <select id="filterCategory">
+        <option value="all">Show All</option>
+        <option value="concert">🎵 Concerts</option>
+        <option value="workshop">📚 Workshops</option>
+        <option value="sports">⚽ Sports</option>
+        <option value="theater">🎭 Theater</option>
+        <option value="food">🍔 Food Fest</option>
+    </select>
+
+    <h2>Event List</h2>
+    <ul id="eventList"></ul> <!-- List to show added events -->
+
+<script>
+    document.addEventListener("DOMContentLoaded", () => {
+        const map = L.map("map").setView([20, 77], 5); // Default view over India
+
+        // Load OpenStreetMap Tiles
+        L.tileLayer("https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png", {
+            attribution: '&copy; OpenStreetMap contributors'
+        }).addTo(map);
+
+        // Track user location
+        if (navigator.geolocation) {
+            navigator.geolocation.getCurrentPosition(position => {
+                const { latitude, longitude } = position.coords;
+                map.setView([latitude, longitude], 12);
+                L.marker([latitude, longitude]).addTo(map)
+                    .bindPopup("Your Location")
+                    .openPopup();
+            });
+        }
+
+        const form = document.getElementById("eventForm");
+        const eventList = document.getElementById("eventList");
+        const searchInput = document.getElementById("searchInput");
+        const suggestionsBox = document.getElementById("suggestions");
+        const filterCategory = document.getElementById("filterCategory");
+
+        let events = JSON.parse(localStorage.getItem("events")) || [];
+        let markers = [];
+
+        // Category Icons (Using FontAwesome)
+        const categoryIcons = {
+            "concert": "🎵", // Music note emoji
+            "workshop": "📚", // Book emoji
+            "sports": "⚽", // Soccer ball emoji
+            "theater": "🎭", // Theater mask emoji
+            "food": "🍔" // Burger emoji
+        };
+
+        function createCustomIcon(symbol) {
+            return L.divIcon({
+                html: `<div style="font-size: 20px; text-align:center;">${symbol}</div>`,
+                className: "", 
+                iconSize: [25, 25]
+            });
+        }
+
+        function addEvent(eventData) {
+            const { name, category, lat, lng } = eventData;
+
+            // Get category icon (default to a pin emoji if not found)
+            const symbol = categoryIcons[category] || "📍";
+
+            // Create a custom icon marker
+            const marker = L.marker([lat, lng], { icon: createCustomIcon(symbol) })
+                .addTo(map)
+                .bindPopup(`<strong>${name}</strong> (${category})`);
+
+            marker.on("click", () => marker.openPopup());
+
+            markers.push({ marker, category });
+
+            const li = document.createElement("li");
+            li.innerHTML = `${symbol} ${name} (${category}) (${lat.toFixed(4)}, ${lng.toFixed(4)}) 
+                <button class="delete-btn">Delete</button>`;
+
+            li.querySelector(".delete-btn").addEventListener("click", () => {
+                map.removeLayer(marker);
+                events = events.filter(e => e !== eventData);
+                saveEvents();
+                renderEvents();
+            });
+
+            eventList.appendChild(li);
+        }
+
+        function saveEvents() {
+            localStorage.setItem("events", JSON.stringify(events));
+        }
+
+        function renderEvents() {
+            eventList.innerHTML = "";
+            markers.forEach(({ marker }) => map.removeLayer(marker));
+            markers = [];
+
+            const selectedCategory = filterCategory.value;
+            events.forEach(event => {
+                if (selectedCategory === "all" || event.category === selectedCategory) {
+                    addEvent(event);
+                }
+            });
+        }
+
+        form.addEventListener("submit", (e) => {
+            e.preventDefault();
+
+            const name = document.getElementById("eventName").value.trim();
+            const category = document.getElementById("eventCategory").value;
+            const lat = parseFloat(document.getElementById("latitude").value);
+            const lng = parseFloat(document.getElementById("longitude").value);
+
+            if (!name || !category || isNaN(lat) || isNaN(lng)) {
+                alert("Please enter valid event details.");
+                return;
+            }
+
+            const newEvent = { name, category, lat, lng };
+            events.push(newEvent);
+            addEvent(newEvent);
+            saveEvents();
+
+            form.reset();
+        });
+
+        filterCategory.addEventListener("change", renderEvents);
+
+        // Search functionality
+        searchInput.addEventListener("input", async () => {
+            const query = searchInput.value.trim();
+            if (!query) {
+                suggestionsBox.style.display = "none";
+                return;
+            }
+
+            const response = await fetch(`https://nominatim.openstreetmap.org/search?format=json&q=${query}`);
+            const data = await response.json();
+
+            suggestionsBox.innerHTML = "";
+            data.forEach(place => {
+                const div = document.createElement("div");
+                div.textContent = place.display_name;
+                div.addEventListener("click", () => {
+                    searchInput.value = place.display_name;
+                    map.setView([place.lat, place.lon], 12);
+                    suggestionsBox.style.display = "none";
+                });
+                suggestionsBox.appendChild(div);
+            });
+
+            suggestionsBox.style.display = "block";
+        });
+
+        renderEvents();
+    });
+</script>
+
+    
+</body>
+</html>
