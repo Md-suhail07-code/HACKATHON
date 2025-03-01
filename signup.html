@@ -1,0 +1,88 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Sign Up Page</title>
+    <style>
+        body {
+            margin: 0;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            height: 100vh;
+            background-image: url('https://res.cloudinary.com/dkjhjihnv/image/upload/v1740637720/login-image_hav7ci.webp');
+            background-size: cover;
+            font-family: Arial, sans-serif;
+        }
+        .container {
+            position: relative;
+            width: 350px;
+            background: transparent;
+            border-width: 5px;
+            border-color: white;
+            backdrop-filter: blur(10px);
+            padding: 20px;
+            border-radius: 10px;
+            text-align: center;
+            color: white;
+        }
+        .container h2 {
+            margin-bottom: 20px;
+        }
+        input {
+            width: 90%;
+            padding: 10px;
+            margin: 10px 0;
+            border: none;
+            border-radius: 5px;
+            background: rgba(255, 255, 255, 0.2);
+            color: white;
+        }
+        input::placeholder {
+            color: rgba(255, 255, 255, 0.7);
+        }
+        .checkbox-container {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 12px;
+            margin-top: 10px;
+        }
+        .checkbox-container input {
+            width: auto;
+            margin: 0 8px 0 0;
+        }
+        button {
+            width: 100%;
+            padding: 10px;
+            margin-top: 20px;
+            border: none;
+            border-radius: 5px;
+            background: linear-gradient(to right, #1c72c9, #00161c);
+            color: white;
+            cursor: pointer;
+        }
+        .login-link {
+            margin-top: 10px;
+            font-size: 12px;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h2>Sign Up</h2>
+        <input type="text" placeholder="Full Name">
+        <input type="email" placeholder="Email">
+        <input type="text" placeholder="Username">
+        <input type="password" placeholder="Password">
+        <input type="password" placeholder="Confirm Password">
+        <div class="checkbox-container">
+            <input type="checkbox" id="terms">
+            <label for="terms">I agree to the terms and conditions</label>
+        </div>
+        <button>Sign Up</button>
+        <div class="login-link">Already have an account? <a href="login.html" style="color: white; text-decoration: none;">Login here</a></div>
+    </div>
+</body>
+</html>
