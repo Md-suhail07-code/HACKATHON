@@ -1,0 +1,66 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>C Connect - City Event Map</title>
+    
+    <link rel="stylesheet" href="https://unpkg.com/leaflet/dist/leaflet.css">
+    
+    <link rel="stylesheet" href="style.css">
+</head>
+<body>
+
+    <div class="dashboard">
+        <aside class="sidebar">
+            <div class="sidebar-content">
+                <h2>🎭 C-Connect</h2>
+
+                <form id="eventForm">
+                    <h3>➕ Add Event</h3>
+                    <input type="text" placeholder="Event Name" required>
+                    <input type="text" placeholder="Location Name" required>
+                    <select required>
+                        <option value="">Select Category</option>
+                        <option value="concert">🎵 Concert</option>
+                        <option value="workshop">📚 Workshop</option>
+                        <option value="sports">⚽ Sports</option>
+                        <option value="theater">🎭 Theater</option>
+                        <option value="food">🍔 Food Fest</option>
+                    </select>
+                    <input type="number" placeholder="Latitude" step="any" required>
+                    <input type="number" placeholder="Longitude" step="any" required>
+                    <button type="submit">Add Event</button>
+                </form>
+
+                <div class="filter-buttons">
+                    <h3><img src="https://www.flaticon.com/free-icon/filter_566737" alt="filterimg" width="20vw"> Filter Events</h3>
+                    <button class="filter active" data-category="all">All</button>
+                    <button class="filter" data-category="concert">🎵 Concerts</button>
+                    <button class="filter" data-category="workshop">📚 Workshops</button>
+                    <button class="filter" data-category="sports">⚽ Sports</button>
+                    <button class="filter" data-category="theater">🎭 Theater</button>
+                    <button class="filter" data-category="food">🍔 Food Fest</button>
+                </div>
+                
+
+                <h3>📍 Event List</h3>
+                <ul class="event-list"></ul>
+            </div>
+        </aside>
+
+        <main class="content">
+            <div class="search-container">
+                <input type="text" placeholder="🔍 Search for a location..." class="search-input">
+                <button class="search-button">Search</button>
+            </div>
+
+            <div id="map"></div>
+        </main>
+    </div>
+
+    <script src="https://unpkg.com/leaflet/dist/leaflet.js"></script>
+    <script src="script.js"></script>
+
+</body>
+</html>
